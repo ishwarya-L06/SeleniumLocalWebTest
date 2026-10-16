@@ -12,7 +12,7 @@ RUN mvn test-compile -B
 FROM maven:3.9.6-eclipse-temurin-17 AS runtime
 WORKDIR /app
 
-# Install browser dependencies and Google Chrome (stable)
+# Install browser dependencies and official Google Chrome Stable cleanly
 RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
@@ -35,5 +35,5 @@ COPY --from=build /root/.m2 /root/.m2
 
 ENV CHROME_BIN=/usr/bin/google-chrome-stable
 
-# Keep this to execute tests smoothly
+# Command to execute tests smoothly
 CMD ["mvn", "test"]
