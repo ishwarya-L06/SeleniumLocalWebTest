@@ -9,7 +9,7 @@ RUN mvn dependency:go-offline -B
 COPY src ./src
 RUN mvn test-compile -B
 
-FROM maven:3.9.6-eclipse-temurin-17-slim AS runtime
+FROM maven:3.9.6-eclipse-temurin-17 AS runtime
 WORKDIR /app
 
 # Install browser dependencies and Google Chrome (stable)
@@ -37,4 +37,3 @@ ENV CHROME_BIN=/usr/bin/google-chrome-stable
 
 # Keep this to execute tests smoothly
 CMD ["mvn", "test"]
-
