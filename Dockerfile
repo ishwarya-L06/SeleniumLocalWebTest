@@ -1,20 +1,42 @@
-# Step 1: Use an official Maven image with JDK 17 to build and bundle the app
-FROM maven:3.8.6-openjdk-17-slim AS build
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
 
-# Copy the build configuration and source code
+# Copy the build config first so Maven can cache dependencies
 COPY pom.xml .
-COPY src ./src
-
-# Pre-fetch dependencies to speed up subsequent image builds
 RUN mvn dependency:go-offline -B
 
-# Package the application tests without executing them during image compilation
-RUN mvn test-compile
+# Copy source and compile
+COPY src ./src
+RUN mvn test-compile -B
 
-# Step 2: Use a slim runtime image containing Chrome for execution headless environment
-FROM openjdk:17-slim
+FROM eclipse-temurin:17-jre-jammy AS runtime
 WORKDIR /app
+
+# Install browser dependencies and Google Chrome (stable)
+RUN apt-get update && apt-get install -y \
+    wget \
+    gnupg \
+    curl \
+    unzip \
+    libglib2.0-0 \
+    libnss3 \
+    libgconf-2-4 \
+    libfontconfig1 \
+    ca-certificates \
+    fonts-liberation \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-linux-signing-keyring.gpg \
+    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-linux-signing-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
+    && apt-get update && apt-get install -y google-chrome-stable \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy only the built app from the build stage
+COPY --from=build /app /app
+
+ENV CHROME_BIN=/usr/bin/google-chrome-stable
+
+# Command to run the TestNG tests inside the container
+CMD ["mvn", "test"]
 
 # Install stable Chrome dependencies required for headless Selenium runs
 RUN apt-get update && apt-get install -y \
