@@ -1,5 +1,5 @@
-# Use an image that already has Chrome, Maven, and Java pre-configured
-FROM markhobson/maven-chrome:3.9.6-openjdk-17
+# Use the correct tag name verified on Docker Hub
+FROM markhobson/maven-chrome:jdk-17
 
 WORKDIR /app
 
